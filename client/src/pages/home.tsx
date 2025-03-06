@@ -12,15 +12,10 @@ export default function Home() {
           Join tailored networking events and connect with like-minded professionals
         </p>
 
-        <div className="space-x-4">
+        <div>
           <Link href="/quiz">
             <Button className="text-lg px-8 py-6">
               Mesh
-            </Button>
-          </Link>
-          <Link href="/dashboard">
-            <Button variant="outline" className="text-lg px-8 py-6">
-              Organizer Dashboard
             </Button>
           </Link>
         </div>
