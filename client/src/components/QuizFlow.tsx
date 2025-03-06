@@ -5,6 +5,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { insertAttendeeSchema, userTypes, startupStages, challenges, industries, eventFormats } from "@shared/schema";
 import { Form, FormControl, FormField, FormItem, FormLabel } from "@/components/ui/form";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
@@ -13,8 +14,21 @@ import { useLocation } from "wouter";
 
 const questions = [
   {
+    id: "name",
+    title: "What's your name?",
+    type: "text",
+    placeholder: "Enter your full name"
+  },
+  {
+    id: "email",
+    title: "What's your email?",
+    type: "email",
+    placeholder: "Enter your email address"
+  },
+  {
     id: "userType",
     title: "Who are you?",
+    type: "radio",
     options: userTypes.map(type => ({
       value: type,
       label: type.split("_").map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(" ")
@@ -23,6 +37,7 @@ const questions = [
   {
     id: "startupStage",
     title: "What's your startup stage?",
+    type: "radio",
     options: startupStages.map(stage => ({
       value: stage,
       label: stage.split("_").map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(" ")
@@ -32,6 +47,7 @@ const questions = [
   {
     id: "challenge",
     title: "What's your biggest challenge right now?",
+    type: "radio",
     options: challenges.map(challenge => ({
       value: challenge,
       label: challenge.split("_").map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(" ")
@@ -41,6 +57,7 @@ const questions = [
   {
     id: "industry",
     title: "Industry focus?",
+    type: "radio",
     options: industries.map(industry => ({
       value: industry,
       label: industry.split("_").map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(" ")
@@ -49,6 +66,7 @@ const questions = [
   {
     id: "preferredFormat",
     title: "Preferred networking format?",
+    type: "radio",
     options: eventFormats.map(format => ({
       value: format,
       label: format.split("_").map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(" ")
@@ -138,22 +156,33 @@ export function QuizFlow() {
 
                 <FormField
                   control={form.control}
-                  name={currentQuestion.id === "userType" ? "userType" : `responses.${currentQuestion.id}`}
+                  name={currentQuestion.id === "userType" ? "userType" : 
+                        currentQuestion.id === "name" ? "name" :
+                        currentQuestion.id === "email" ? "email" :
+                        `responses.${currentQuestion.id}`}
                   render={({ field }) => (
                     <FormItem>
                       <FormControl>
-                        <RadioGroup
-                          onValueChange={field.onChange}
-                          value={field.value}
-                          className="space-y-4"
-                        >
-                          {currentQuestion.options.map(option => (
-                            <div key={option.value} className="flex items-center space-x-2">
-                              <RadioGroupItem value={option.value} id={option.value} />
-                              <FormLabel htmlFor={option.value}>{option.label}</FormLabel>
-                            </div>
-                          ))}
-                        </RadioGroup>
+                        {currentQuestion.type === "radio" ? (
+                          <RadioGroup
+                            onValueChange={field.onChange}
+                            value={field.value}
+                            className="space-y-4"
+                          >
+                            {currentQuestion.options?.map(option => (
+                              <div key={option.value} className="flex items-center space-x-2">
+                                <RadioGroupItem value={option.value} id={option.value} />
+                                <FormLabel htmlFor={option.value}>{option.label}</FormLabel>
+                              </div>
+                            ))}
+                          </RadioGroup>
+                        ) : (
+                          <Input
+                            {...field}
+                            type={currentQuestion.type}
+                            placeholder={currentQuestion.placeholder}
+                          />
+                        )}
                       </FormControl>
                     </FormItem>
                   )}
