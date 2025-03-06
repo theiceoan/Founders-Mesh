@@ -15,7 +15,7 @@ export default function Home() {
         <div className="space-x-4">
           <Link href="/quiz">
             <Button className="text-lg px-8 py-6">
-              Join an Event
+              Mesh
             </Button>
           </Link>
           <Link href="/dashboard">
