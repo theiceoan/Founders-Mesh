@@ -2,8 +2,27 @@ import {
   type Attendee, 
   type InsertAttendee, 
   type Group, 
-  type InsertGroup 
+  type InsertGroup,
+  userTypes,
+  startupStages,
+  challenges,
+  industries,
+  eventFormats
 } from "@shared/schema";
+
+// Mock data generation
+const mockNames = [
+  "Sarah Chen", "Michael Rodriguez", "Emma Thompson", "David Kim", 
+  "Priya Patel", "James Wilson", "Lisa Zhang", "Alex Johnson",
+  "Maria Garcia", "Tom Anderson", "Ava Williams", "Ryan Taylor",
+  "Sophie Martin", "Daniel Lee", "Rachel Brown", "Chris Davis"
+];
+
+const mockEmails = (name: string) => `${name.toLowerCase().replace(' ', '.')}@example.com`;
+
+function getRandomElement<T>(arr: T[]): T {
+  return arr[Math.floor(Math.random() * arr.length)];
+}
 
 export interface IStorage {
   createAttendee(attendee: InsertAttendee): Promise<Attendee>;
@@ -25,6 +44,43 @@ export class MemStorage implements IStorage {
     this.groups = new Map();
     this.attendeeId = 1;
     this.groupId = 1;
+
+    // Generate mock data
+    this.generateMockData();
+  }
+
+  private generateMockData() {
+    // Create mock attendees
+    mockNames.forEach(name => {
+      const mockAttendee: InsertAttendee = {
+        name,
+        email: mockEmails(name),
+        userType: getRandomElement(userTypes),
+        responses: {
+          startupStage: getRandomElement(startupStages),
+          challenge: getRandomElement(challenges),
+          industry: getRandomElement(industries),
+          preferredFormat: getRandomElement(eventFormats)
+        }
+      };
+      this.createAttendee(mockAttendee);
+    });
+
+    // Create some mock groups
+    const mockGroupNames = [
+      "SaaS Founders Dinner",
+      "FinTech Roundtable",
+      "AI/ML Mentorship Circle",
+      "HealthTech Innovation Dinner"
+    ];
+
+    mockGroupNames.forEach(name => {
+      const mockGroup: InsertGroup = {
+        name,
+        format: getRandomElement(eventFormats)
+      };
+      this.createGroup(mockGroup);
+    });
   }
 
   async createAttendee(attendee: InsertAttendee): Promise<Attendee> {

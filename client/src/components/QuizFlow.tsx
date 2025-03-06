@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
+import { useLocation } from "wouter";
 
 const questions = [
   {
@@ -57,7 +58,10 @@ const questions = [
 
 export function QuizFlow() {
   const [step, setStep] = useState(0);
+  const [isSubmitted, setIsSubmitted] = useState(false);
   const { toast } = useToast();
+  const [, setLocation] = useLocation();
+
   const form = useForm({
     resolver: zodResolver(insertAttendeeSchema),
     defaultValues: {
@@ -73,6 +77,15 @@ export function QuizFlow() {
     }
   });
 
+  useEffect(() => {
+    if (isSubmitted) {
+      const timer = setTimeout(() => {
+        setLocation("/");
+      }, 3000);
+      return () => clearTimeout(timer);
+    }
+  }, [isSubmitted, setLocation]);
+
   const currentUserType = form.watch("userType");
   const filteredQuestions = questions.filter(q => 
     !q.showFor || q.showFor.includes(currentUserType)
@@ -83,6 +96,7 @@ export function QuizFlow() {
   const onSubmit = async (data: any) => {
     try {
       await apiRequest("POST", "/api/attendees", data);
+      setIsSubmitted(true);
       toast({
         title: "Success!",
         description: "You've been registered for the event"
@@ -95,6 +109,17 @@ export function QuizFlow() {
       });
     }
   };
+
+  if (isSubmitted) {
+    return (
+      <Card className="w-full max-w-lg mx-auto">
+        <CardContent className="pt-6 text-center">
+          <h2 className="text-2xl font-bold mb-4">Thank you for registering!</h2>
+          <p className="text-muted-foreground">Enjoy the event! We'll find the perfect matches for you.</p>
+        </CardContent>
+      </Card>
+    );
+  }
 
   return (
     <Form {...form}>
@@ -110,7 +135,7 @@ export function QuizFlow() {
             <Card className="w-full max-w-lg mx-auto">
               <CardContent className="pt-6">
                 <h2 className="text-2xl font-bold mb-6">{currentQuestion.title}</h2>
-                
+
                 <FormField
                   control={form.control}
                   name={currentQuestion.id === "userType" ? "userType" : `responses.${currentQuestion.id}`}
@@ -144,7 +169,7 @@ export function QuizFlow() {
                       Back
                     </Button>
                   )}
-                  
+
                   <Button
                     type={step === filteredQuestions.length - 1 ? "submit" : "button"}
                     onClick={() => {
