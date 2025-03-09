@@ -1,6 +1,8 @@
 import { QueryClient, QueryFunction } from "@tanstack/react-query";
 
-const API_BASE_URL = 'http://localhost:5000';
+const API_BASE_URL = process.env.NODE_ENV === 'production'
+  ? 'https://theiceoan.github.io'  // Update this with your Replit app URL
+  : '';
 
 async function throwIfResNotOk(res: Response) {
   if (!res.ok) {
