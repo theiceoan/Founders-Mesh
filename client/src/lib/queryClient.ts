@@ -1,8 +1,6 @@
 import { QueryClient, QueryFunction } from "@tanstack/react-query";
 
-const API_BASE_URL = process.env.NODE_ENV === 'production' 
-  ? 'http:localhost:5000'  // Update this with your Replit app URL
-  : '';
+const API_BASE_URL = 'http://localhost:5000';
 
 async function throwIfResNotOk(res: Response) {
   if (!res.ok) {
