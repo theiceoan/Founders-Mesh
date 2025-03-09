@@ -36,6 +36,8 @@ app.use(express.urlencoded({ extended: false }));
     serveStatic(app);
   }
 
+  app.options('*', cors(corsOptions));
+
   const port = 5000;
   server.listen({
     port,
