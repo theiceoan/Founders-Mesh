@@ -1,4 +1,4 @@
-import { pgTable, text, serial, integer, jsonb } from "drizzle-orm/pg-core";
+import { sqliteTable, text, integer } from "drizzle-orm/sqlite-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
@@ -8,19 +8,19 @@ export const challenges = ["fundraising", "hiring", "new_markets", "scaling_ops"
 export const industries = ["saas", "fintech", "healthtech", "ecommerce", "ai_ml", "other"] as const;
 export const eventFormats = ["dinner", "roundtable", "mentorship"] as const;
 
-export const attendees = pgTable("attendees", {
-  id: serial("id").primaryKey(),
-  userType: text("user_type", { enum: userTypes }).notNull(),
+export const attendees = sqliteTable("attendees", {
+  id: integer("id").primaryKey({ autoIncrement: true }),
+  userType: text("user_type").notNull(),
   name: text("name").notNull(),
   email: text("email").notNull(),
-  responses: jsonb("responses").notNull(),
+  responses: text("responses").notNull(),  // Store JSON as text in SQLite
   groupId: integer("group_id"),
 });
 
-export const groups = pgTable("groups", {
-  id: serial("id").primaryKey(),
+export const groups = sqliteTable("groups", {
+  id: integer("id").primaryKey({ autoIncrement: true }),
   name: text("name").notNull(),
-  format: text("format", { enum: eventFormats }).notNull(),
+  format: text("format").notNull(),
   locked: text("locked").default("false"),
 });
 
