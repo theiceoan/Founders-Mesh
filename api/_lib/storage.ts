@@ -1,76 +1,95 @@
-import { 
-  type Attendee, 
-  type InsertAttendee, 
-  type Group, 
-  type InsertGroup,
-  attendees,
-  groups
-} from "../../shared/schema";
-import { db } from "./db";
-import { eq } from "drizzle-orm";
+import { type InsertAttendee, type Attendee } from "../../shared/schema";
+import { stringify } from 'csv-stringify/sync';
+import nodemailer from 'nodemailer';
+
+// Configure nodemailer with Gmail
+const transporter = nodemailer.createTransport({
+  service: 'gmail',
+  auth: {
+    user: process.env.GMAIL_EMAIL,
+    pass: process.env.GMAIL_APP_PASSWORD
+  }
+});
+
+// In-memory storage for the current session
+let attendees: Attendee[] = [];
+let currentId = 1;
+
+function convertToCSV(attendees: Attendee[]): string {
+  console.log('Converting attendees to CSV format:', attendees.length, 'records');
+  const rows = attendees.map(attendee => ({
+    id: attendee.id,
+    name: attendee.name,
+    email: attendee.email,
+    userType: attendee.userType,
+    startupStage: attendee.responses.startupStage || 'N/A',
+    challenge: attendee.responses.challenge || 'N/A',
+    industry: attendee.responses.industry,
+    preferredFormat: attendee.responses.preferredFormat
+  }));
+
+  const csvData = stringify(rows, {
+    header: true,
+    columns: ['id', 'name', 'email', 'userType', 'startupStage', 'challenge', 'industry', 'preferredFormat']
+  });
+  console.log('CSV generation successful');
+  return csvData;
+}
+
+async function sendEmailWithCSV(csvData: string) {
+  console.log('Preparing to send email with CSV attachment');
+  const date = new Date().toISOString().split('T')[0];
+
+  try {
+    await transporter.sendMail({
+      from: process.env.GMAIL_EMAIL,
+      to: process.env.GMAIL_EMAIL,
+      subject: `Founders Mesh - Attendee Data ${date}`,
+      text: 'Please find attached the latest attendee data.',
+      attachments: [{
+        filename: `attendees-${date}.csv`,
+        content: csvData
+      }]
+    });
+    console.log('Email sent successfully');
+  } catch (error) {
+    console.error('Error sending email:', error);
+    throw error;
+  }
+}
 
 export interface IStorage {
   createAttendee(attendee: InsertAttendee): Promise<Attendee>;
   getAttendees(): Promise<Attendee[]>;
-  createGroup(group: InsertGroup): Promise<Group>;
-  getGroups(): Promise<Group[]>;
-  assignToGroup(attendeeId: number, groupId: number): Promise<void>;
-  lockGroup(groupId: number): Promise<void>;
 }
 
-export class DatabaseStorage implements IStorage {
+export class EmailStorage implements IStorage {
   async createAttendee(attendee: InsertAttendee): Promise<Attendee> {
-    // For SQLite, we need to stringify the JSON responses
-    const attendeeWithStringResponses = {
+    console.log('Creating new attendee:', attendee);
+    const newAttendee: Attendee = {
       ...attendee,
-      responses: JSON.stringify(attendee.responses)
+      id: currentId++,
+      groupId: null
     };
 
-    const [created] = await db
-      .insert(attendees)
-      .values(attendeeWithStringResponses)
-      .returning();
+    attendees.push(newAttendee);
+    console.log('Added attendee to in-memory storage. Total attendees:', attendees.length);
 
-    return {
-      ...created,
-      responses: JSON.parse(created.responses)
-    };
+    try {
+      // Convert all attendees to CSV and send email
+      const csvData = convertToCSV(attendees);
+      await sendEmailWithCSV(csvData);
+      console.log('Successfully processed attendee submission with email notification');
+      return newAttendee;
+    } catch (error) {
+      console.error('Failed to process attendee submission:', error);
+      throw error;
+    }
   }
 
   async getAttendees(): Promise<Attendee[]> {
-    const results = await db.select().from(attendees);
-    // Parse the JSON responses for each attendee
-    return results.map(attendee => ({
-      ...attendee,
-      responses: JSON.parse(attendee.responses)
-    }));
-  }
-
-  async createGroup(group: InsertGroup): Promise<Group> {
-    const [created] = await db
-      .insert(groups)
-      .values(group)
-      .returning();
-    return created;
-  }
-
-  async getGroups(): Promise<Group[]> {
-    return db.select().from(groups);
-  }
-
-  async assignToGroup(attendeeId: number, groupId: number): Promise<void> {
-    await db
-      .update(attendees)
-      .set({ groupId })
-      .where(eq(attendees.id, attendeeId));
-  }
-
-  async lockGroup(groupId: number): Promise<void> {
-    await db
-      .update(groups)
-      .set({ locked: "true" })
-      .where(eq(groups.id, groupId));
+    return attendees;
   }
 }
 
-export const storage = new DatabaseStorage();
+export const storage = new EmailStorage();

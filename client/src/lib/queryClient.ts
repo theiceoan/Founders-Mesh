@@ -1,8 +1,6 @@
 import { QueryClient, QueryFunction } from "@tanstack/react-query";
 
-const API_BASE_URL = process.env.NODE_ENV === 'production'
-  ? process.env.VITE_API_URL || '' // Will be set in Vercel environment variables
-  : '';
+process.env.NEXT_PUBLIC_API_BASE_URL || "";
 
 async function throwIfResNotOk(res: Response) {
   if (!res.ok) {
