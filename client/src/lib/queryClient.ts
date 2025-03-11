@@ -1,7 +1,7 @@
 import { QueryClient, QueryFunction } from "@tanstack/react-query";
 
 const API_BASE_URL = process.env.NODE_ENV === 'production'
-  ? 'https://theiceoan.github.io'  // Update this with your Replit app URL
+  ? process.env.VITE_API_URL || '' // Will be set in Vercel environment variables
   : '';
 
 async function throwIfResNotOk(res: Response) {
