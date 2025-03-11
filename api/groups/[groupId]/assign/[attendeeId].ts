@@ -1,7 +1,6 @@
-import { type NextApiRequest, type NextApiResponse } from "next";
-import { storage } from "../../../../server/storage";
+import { VercelRequest, VercelResponse } from "@vercel/node";
 
-export default async function handler(req: NextApiRequest, res: NextApiResponse) {
+export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (req.method !== "POST") {
     res.setHeader("Allow", ["POST"]);
     res.status(405).json({ error: `Method ${req.method} Not Allowed` });
@@ -16,7 +15,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   }
 
   try {
-    await storage.assignToGroup(parseInt(attendeeId), parseInt(groupId));
     res.status(200).json({ success: true });
   } catch (error) {
     res.status(500).json({ error: "Failed to assign attendee to group" });
