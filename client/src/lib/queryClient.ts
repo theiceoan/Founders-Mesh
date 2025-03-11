@@ -1,6 +1,6 @@
 import { QueryClient, QueryFunction } from "@tanstack/react-query";
 
-process.env.NEXT_PUBLIC_API_BASE_URL || "";
+const API_BASE_URL = process.env.NODE_ENV === "development" ? "" : "/Founders-Mesh";
 
 async function throwIfResNotOk(res: Response) {
   if (!res.ok) {
